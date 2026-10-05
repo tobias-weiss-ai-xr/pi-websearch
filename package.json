@@ -18,6 +18,22 @@
     "turndown": "^7.2.4",
     "typescript": "^5.6.0"
   },
-  "keywords": ["pi-package", "pi", "pi-coding-agent", "extension", "web-search", "websearch", "webfetch"],
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-coding-agent",
+    "extension",
+    "drop-in",
+    "web-search",
+    "websearch",
+    "webfetch",
+    "caching",
+    "exa",
+    "searxng",
+    "duckduckgo",
+    "brave",
+    "tavily",
+    "google"
+  ],
   "files": ["src", "README.md", "LICENSE"]
 }
