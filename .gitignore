@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.af-state/
+state/
+*.log
+.tmp/
