@@ -82,13 +82,16 @@ Config file example (`~/.pi/agent/pi-websearch.json` or
 
 | Setting | Env var | Default | Purpose |
 |---|---|---|---|
-| `provider` | `PI_WEBSEARCH_PROVIDER` | `exa` | Primary provider: `exa`, `searxng`, `duckduckgo`, `brave`, `tavily`, `google` |
+| `provider` | `PI_WEBSEARCH_PROVIDER` | `exa` | Primary provider: `exa`, `searxng`, `duckduckgo`, `brave`, `tavily`, `google`, `cloudflare` |
 | `exaApiKey` | `EXA_API_KEY` | – | Exa API key (works anonymously without one) |
 | `searxngBaseUrl` | `SEARXNG_BASE_URL` | – | Self-hosted SearXNG instance URL (required for `searxng`) |
 | `braveApiKey` | `BRAVE_API_KEY` | – | Brave Search API key |
 | `tavilyApiKey` | `TAVILY_API_KEY` | – | Tavily API key |
 | `googleApiKey` | `GOOGLE_API_KEY` | – | Google Programmable Search API key (needs `googleCx` too) |
 | `googleCx` | `GOOGLE_CX` | – | Google Programmable Search engine ID |
+| `cloudflareApiToken` | `CLOUDFLARE_API_TOKEN` | – | Cloudflare API token (needs Workers AI + AI Gateway read perms) |
+| `cloudflareAccountId` | `CLOUDFLARE_ACCOUNT_ID` | – | Cloudflare account ID (required for `cloudflare`) |
+| `cloudflareGatewayId` | `CLOUDFLARE_GATEWAY_ID` | `default` | AI Gateway to route the search through |
 | `numResults` | – | `8` | Default result count |
 | `type` | – | `auto` | Search depth: `auto`, `fast`, `deep` |
 | `contextMaxCharacters` | – | `10000` | Max characters of returned search context |
@@ -105,6 +108,7 @@ Config file example (`~/.pi/agent/pi-websearch.json` or
 | **Brave** | ❌ needs `BRAVE_API_KEY` | Queries sent to api.search.brave.com | Independent index |
 | **Tavily** | ❌ needs `TAVILY_API_KEY` | Queries sent to api.tavily.com | LLM-oriented search API |
 | **Google CSE** | ❌ needs `GOOGLE_API_KEY` + `GOOGLE_CX` | Queries sent to googleapis.com | Programmable Search Engine |
+| **Cloudflare** | ❌ needs `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` | Queries sent to api.cloudflare.com | Beta Web Search API via AI Gateway (ceramic backend, billed to gateway credits) |
 
 **Fallback behavior:** the configured provider is primary; if it errors,
 times out, or returns nothing, the chain walks through the remaining

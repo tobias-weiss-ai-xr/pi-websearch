@@ -1,7 +1,7 @@
 {
   "name": "@tobias-weiss-ai-xr/pi-websearch",
   "version": "0.1.0",
-  "description": "Drop-in replacement web search + web fetch extension for the pi coding agent. Multi-provider (Exa, SearXNG, DuckDuckGo, Brave, Tavily, Google) with auto-fallback, caching, date filtering, and LLM-optimized context. Tuned for performance.",
+  "description": "Drop-in replacement web search + web fetch extension for the pi coding agent. Multi-provider (Exa, SearXNG, DuckDuckGo, Brave, Tavily, Google, Cloudflare) with auto-fallback, caching, date filtering, and LLM-optimized context. Tuned for performance.",
   "license": "MIT",
   "type": "module",
   "pi": {
@@ -33,7 +33,8 @@
     "duckduckgo",
     "brave",
     "tavily",
-    "google"
+    "google",
+    "cloudflare"
   ],
   "files": ["src", "README.md", "LICENSE"]
 }

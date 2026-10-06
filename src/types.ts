@@ -53,7 +53,8 @@ export type ProviderId =
   | "duckduckgo"
   | "brave"
   | "tavily"
-  | "google";
+  | "google"
+  | "cloudflare";
 
 /** Fully-resolved extension configuration; defaults filled in by loadConfig. */
 export interface ProviderConfig {
@@ -69,4 +70,8 @@ export interface ProviderConfig {
   tavilyApiKey?: string;
   googleApiKey?: string;
   googleCx?: string;
+  cloudflareApiToken?: string;
+  cloudflareAccountId?: string;
+  /** AI Gateway to route through; defaults to "default". */
+  cloudflareGatewayId?: string;
 }

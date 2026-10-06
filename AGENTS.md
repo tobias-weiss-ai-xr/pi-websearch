@@ -47,7 +47,7 @@ bun test                 # bun test runner (tests/ dir)
 
 Default provider: **Exa MCP** (`https://mcp.exa.ai/mcp`, JSON-RPC over HTTP,
 works anonymously). Alternative: **SearXNG** (self-hosted, private).
-Optional keyed providers: Brave, Tavily, Google CSE.
+Optional keyed providers: Brave, Tavily, Google CSE, Cloudflare.
 
 Auto-fallback chain on provider failure (so the tool never dies on one
 backend being down). Result cache with TTL (default 300 s) keyed by

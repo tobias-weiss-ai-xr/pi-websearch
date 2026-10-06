@@ -14,6 +14,9 @@ const MANAGED_ENV = [
   "TAVILY_API_KEY",
   "GOOGLE_API_KEY",
   "GOOGLE_CX",
+  "CLOUDFLARE_API_TOKEN",
+  "CLOUDFLARE_ACCOUNT_ID",
+  "CLOUDFLARE_GATEWAY_ID",
   "HOME",
   "USERPROFILE",
 ];
@@ -107,6 +110,16 @@ describe("loadConfig", () => {
     const cfg = loadConfig(projectDir);
     expect(cfg.provider).toBe("duckduckgo");
     expect(cfg.numResults).toBe(2);
+  });
+
+  test("cloudflare env vars load", () => {
+    process.env.CLOUDFLARE_API_TOKEN = "cf-token";
+    process.env.CLOUDFLARE_ACCOUNT_ID = "acc-1";
+    process.env.CLOUDFLARE_GATEWAY_ID = "gw-2";
+    const cfg = loadConfig(projectDir);
+    expect(cfg.cloudflareApiToken).toBe("cf-token");
+    expect(cfg.cloudflareAccountId).toBe("acc-1");
+    expect(cfg.cloudflareGatewayId).toBe("gw-2");
   });
 
   test("unknown provider throws with valid providers listed", () => {

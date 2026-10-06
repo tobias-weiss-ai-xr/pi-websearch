@@ -10,6 +10,7 @@ export const VALID_PROVIDERS: readonly ProviderId[] = [
   "brave",
   "tavily",
   "google",
+  "cloudflare",
 ] as const;
 
 /** Documented defaults, used by loadConfig and by the tool layer for args. */
@@ -41,6 +42,9 @@ const ENV_VARS: Record<string, string> = {
   tavilyApiKey: "TAVILY_API_KEY",
   googleApiKey: "GOOGLE_API_KEY",
   googleCx: "GOOGLE_CX",
+  cloudflareApiToken: "CLOUDFLARE_API_TOKEN",
+  cloudflareAccountId: "CLOUDFLARE_ACCOUNT_ID",
+  cloudflareGatewayId: "CLOUDFLARE_GATEWAY_ID",
 };
 
 const SEARCH_TYPES: readonly SearchType[] = ["auto", "fast", "deep"];
@@ -137,5 +141,8 @@ export function loadConfig(cwd: string): ProviderConfig {
     tavilyApiKey: pickString(sources, "tavilyApiKey"),
     googleApiKey: pickString(sources, "googleApiKey"),
     googleCx: pickString(sources, "googleCx"),
+    cloudflareApiToken: pickString(sources, "cloudflareApiToken"),
+    cloudflareAccountId: pickString(sources, "cloudflareAccountId"),
+    cloudflareGatewayId: pickString(sources, "cloudflareGatewayId"),
   };
 }

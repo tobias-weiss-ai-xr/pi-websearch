@@ -6,6 +6,7 @@ import type {
   SearchResult,
 } from "../types";
 import { createBraveProvider } from "../providers/brave";
+import { createCloudflareProvider } from "../providers/cloudflare";
 import { createDuckduckgoProvider } from "../providers/duckduckgo";
 import { createExaProvider } from "../providers/exa";
 import { createGoogleProvider } from "../providers/google";
@@ -31,9 +32,10 @@ const FACTORIES: Record<ProviderId, (cfg: ProviderConfig) => SearchProvider> = {
   brave: createBraveProvider,
   tavily: createTavilyProvider,
   google: createGoogleProvider,
+  cloudflare: createCloudflareProvider,
 };
 
-const KEYED: readonly ProviderId[] = ["brave", "tavily", "google"];
+const KEYED: readonly ProviderId[] = ["brave", "tavily", "google", "cloudflare"];
 
 /** Whether the provider has the keys/config it needs to run. */
 function isAvailable(id: ProviderId, cfg: ProviderConfig): boolean {
@@ -44,6 +46,8 @@ function isAvailable(id: ProviderId, cfg: ProviderConfig): boolean {
       return !!cfg.tavilyApiKey;
     case "google":
       return !!cfg.googleApiKey && !!cfg.googleCx;
+    case "cloudflare":
+      return !!cfg.cloudflareApiToken && !!cfg.cloudflareAccountId;
     case "searxng":
       return !!cfg.searxngBaseUrl;
     default:

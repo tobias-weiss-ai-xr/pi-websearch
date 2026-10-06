@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import type { ProviderConfig, SearchResult } from "../src/types";
 import { createBraveProvider } from "../src/providers/brave";
+import { createCloudflareProvider } from "../src/providers/cloudflare";
 import { createDuckduckgoProvider } from "../src/providers/duckduckgo";
 import { createExaProvider } from "../src/providers/exa";
 import { createGoogleProvider } from "../src/providers/google";
@@ -366,6 +367,75 @@ describe("google provider", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Cloudflare Web Search API
+// ---------------------------------------------------------------------------
+
+describe("cloudflare provider", () => {
+  test("posts to the websearch endpoint with bearer token and gateway", async () => {
+    const { calls } = mockFetch(() =>
+      jsonResponse({
+        items: [
+          { url: "https://cf.example/a", title: "CF hit", description: "CF desc" },
+          { url: "https://cf.example/b" },
+          { title: "no url, drop me" },
+        ],
+      }),
+    );
+    const results = await createCloudflareProvider({
+      cloudflareApiToken: "cf-tok",
+      cloudflareAccountId: "acc-123",
+      cloudflareGatewayId: "my-gw",
+      requestTimeoutMs: 1000,
+    }).search(SEARCH);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe(
+      "https://api.cloudflare.com/client/v4/accounts/acc-123/ai/websearch/",
+    );
+    expect(calls[0].init?.method).toBe("POST");
+    const headers = new Headers(calls[0].init?.headers);
+    expect(headers.get("authorization")).toBe("Bearer cf-tok");
+    const body = JSON.parse(String(calls[0].init?.body)) as Record<string, unknown>;
+    expect(body.query).toBe("bun runtime");
+    expect(body.provider).toBe("ceramic");
+    expect(body.limit).toBe(5);
+    expect(body.options).toEqual({ gateway: { id: "my-gw" } });
+    expect(results).toHaveLength(2);
+    expect(results[0]).toEqual({
+      title: "CF hit",
+      url: "https://cf.example/a",
+      snippet: "CF desc",
+    });
+    expect(results[1]?.title).toBe("https://cf.example/b");
+  });
+
+  test("caps limit at 10 and defaults gateway to 'default'", async () => {
+    const { calls } = mockFetch(() => jsonResponse({ items: [] }));
+    await createCloudflareProvider({
+      cloudflareApiToken: "t",
+      cloudflareAccountId: "a",
+      requestTimeoutMs: 1000,
+    }).search({ ...SEARCH, numResults: 99 });
+    const body = JSON.parse(String(calls[0].init?.body)) as Record<string, unknown>;
+    expect(body.limit).toBe(10);
+    const options = body.options as { gateway: { id: string } };
+    expect(options.gateway.id).toBe("default");
+  });
+
+  test("missing token or account id throws before any fetch", async () => {
+    mockFetch(() => jsonResponse({ items: [] }));
+    await expect(
+      createCloudflareProvider({ requestTimeoutMs: 1000 }).search(SEARCH),
+    ).rejects.toThrow("CLOUDFLARE_API_TOKEN");
+    await expect(
+      createCloudflareProvider({
+        cloudflareApiToken: "t",
+        requestTimeoutMs: 1000,
+      }).search(SEARCH),
+    ).rejects.toThrow("CLOUDFLARE_ACCOUNT_ID");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Provider registry + fallback chain
 // ---------------------------------------------------------------------------
 
@@ -394,6 +464,15 @@ describe("provider registry", () => {
   test("falls back to exa when nothing keyed is available", () => {
     const chain = createProvider(cfg({ provider: "google" }));
     expect(chain.primary.name).toBe("exa");
+  });
+
+  test("auto-picks cloudflare last among keyed providers", () => {
+    const chain = createProvider(cfg({
+      provider: "brave",
+      cloudflareApiToken: "t",
+      cloudflareAccountId: "a",
+    }));
+    expect(chain.primary.name).toBe("cloudflare");
   });
 });
 
