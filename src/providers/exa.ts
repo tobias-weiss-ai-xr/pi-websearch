@@ -105,7 +105,13 @@ function parseExaContent(text: string): SearchResult[] {
       .filter((r): r is SearchResult => r !== undefined);
     if (results.length > 0) return results;
   }
-  // Plain text payload → single pseudo-result so the text still reaches the LLM.
+  // Plain-text payloads: Exa serves *rate limits and auth errors as HTTP 200
+  // with a short prose body*. Detect those and throw so the fallback chain
+  // skips Exa instead of surfacing the error text as a fake "result".
+  if (isServiceErrorText(trimmed)) {
+    throw new Error(`exa: provider error in text payload: ${trimmed.slice(0, 160)}`);
+  }
+  // Genuinely plain-text prose → single pseudo-result so the text still reaches the LLM.
   return [
     {
       title: trimmed.split(/\r?\n/, 1)[0]?.slice(0, 120) || "Exa result",
@@ -113,6 +119,20 @@ function parseExaContent(text: string): SearchResult[] {
       snippet: trimmed,
     },
   ];
+}
+
+/**
+ * True when a plain-text payload is a provider-level service message
+ * (rate limit, auth/quota error, key hint) rather than searchable prose.
+ * Exa returns these with HTTP 200, so the status code alone can't tell.
+ */
+function isServiceErrorText(text: string): boolean {
+  const t = text.slice(0, 400).toLowerCase();
+  if (/rate\s*[-_ ]?limit/.test(t)) return true; // free-tier anonymous cap
+  if (/create (your )?own .*api key/.test(t)) return true; // Exa's fix hint
+  if (/(api key|quota|credits?) (invalid|missing|expired|exhausted|required)/.test(t))
+    return true;
+  return false;
 }
 
 function mapExaItem(item: unknown): SearchResult | undefined {

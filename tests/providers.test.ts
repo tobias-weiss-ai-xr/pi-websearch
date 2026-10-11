@@ -144,6 +144,42 @@ describe("exa provider", () => {
       createExaProvider({ requestTimeoutMs: 1000 }).search(SEARCH),
     ).rejects.toThrow("HTTP 429");
   });
+
+  test("rate-limit text body throws instead of becoming a pseudo-result", async () => {
+    // Exa serves rate limits as HTTP 200 with a prose body — that must NOT
+    // surface as a fake result, or the fallback chain would think Exa succeeded.
+    mockFetch(
+      () =>
+        jsonResponse({
+          jsonrpc: "2.0",
+          id: 1,
+          result: {
+            content: [
+              {
+                type: "text",
+                text: "You've hit Exa's free MCP rate limit. To continue without limits, create your own Exa API key.",
+              },
+            ],
+          },
+        }),
+    );
+    await expect(
+      createExaProvider({ requestTimeoutMs: 1000 }).search(SEARCH),
+    ).rejects.toThrow(/rate limit/i);
+  });
+
+  test("raw (SSE) rate-limit text payload also throws", async () => {
+    mockFetch(
+      () =>
+        new Response(
+          "You've hit Exa's free MCP rate limit. Create your own API key to continue.",
+          { status: 200 },
+        ),
+    );
+    await expect(
+      createExaProvider({ requestTimeoutMs: 1000 }).search(SEARCH),
+    ).rejects.toThrow(/rate limit/i);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -534,5 +570,40 @@ describe("searchWithFallback", () => {
     const { results, provider } = await searchWithFallback(chain, SEARCH);
     expect(provider).toBe("none");
     expect(results).toEqual([]);
+  });
+
+  test("exa rate limit is skipped and duckduckgo serves the results", async () => {
+    // End-to-end: primary Exa rate-limited (200 + prose body), DuckDuckGo OK.
+    const chain = createProvider({ ...cfg(), provider: "exa" });
+    const calls: string[] = [];
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input);
+      calls.push(url);
+      if (url.includes("mcp.exa.ai")) {
+        return jsonResponse({
+          jsonrpc: "2.0",
+          id: 1,
+          result: {
+            content: [
+              {
+                type: "text",
+                text: "You've hit Exa's free MCP rate limit. Create your own API key to continue.",
+              },
+            ],
+          },
+        });
+      }
+      if (url.includes("duckduckgo.com")) {
+        return new Response(
+          `<a class="result-link" href="https://duckduckgo.com/l/?uddg=https%3A%2F%2Fmitutoyo.example">Mitutoyo</a>,\n<div class="result-snippet">CTL Germany in Oberndorf.</div>.`,
+          { status: 200 },
+        );
+      }
+      return new Response("", { status: 500 });
+    }) as typeof fetch;
+    const { results, provider } = await searchWithFallback(chain, SEARCH);
+    expect(provider).toBe("duckduckgo");
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0]?.url).toContain("mitutoyo.example");
   });
 });
